@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Memo;
+use App\Models\CetakPDF;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
-class MemoController extends Controller
+class CetakPDFController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -35,7 +35,7 @@ class MemoController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Memo $memo)
+    public function show(CetakPDF $cetakPDF)
     {
         //
     }
@@ -43,7 +43,7 @@ class MemoController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Memo $memo)
+    public function edit(CetakPDF $cetakPDF)
     {
         //
     }
@@ -51,7 +51,7 @@ class MemoController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Memo $memo)
+    public function update(Request $request, CetakPDF $cetakPDF)
     {
         //
     }
@@ -59,7 +59,7 @@ class MemoController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Memo $memo)
+    public function destroy(CetakPDF $cetakPDF)
     {
         //
     }
