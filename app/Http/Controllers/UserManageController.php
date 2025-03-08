@@ -2,65 +2,94 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\UserManage;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Hash;
+use App\Models\Divisi;
+use App\Models\Position;
+use App\Models\Role;
+use App\Models\User;
 
 class UserManageController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function index(Request $request, $id = null)
     {
-        //
+        // Ambil data dari Divisi, Role, dan Position
+        $divisi = Divisi::all();  
+        $roles = Role::all();  
+        $positions = Position::all();
+
+        // Mengambil parameter sorting, default 'asc'
+        $sortOrder = $request->query('sort', 'asc');
+
+        // Query awal dengan relasi yang diperlukan
+        $users = User::with(['role', 'divisi', 'position']);
+
+        // Jika ada pencarian, tambahkan kondisi pencarian
+        if ($request->filled('search')) {
+            $users->where(function ($query) use ($request) {
+                $query->where('firstname', 'like', '%' . $request->search . '%')
+                      ->orWhere('lastname', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        // Jika ada parameter sorting, lakukan pengurutan berdasarkan firstname
+        $users->orderBy('firstname', $sortOrder);
+
+        // Paginate hasil query
+        $users = $users->paginate(6);
+
+        // Kirim data ke view user-manage
+        return view('superadmin.user-manage', compact('divisi', 'roles', 'positions', 'users', 'sortOrder'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        //
-    }
+        $validator = Validator::make($request->all(), [
+            'firstname' => 'required|string|max:255',
+            'lastname' => 'required|string|max:255',
+            'username' => 'required|string|max:255|unique:users',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8|confirmed',
+            'phone_number' => 'required|string|max:15',
+            'divisi_id_divisi' => 'required|exists:divis,id_divisi',
+            'position_id_position' => 'required|exists:position,id_position',
+            'role_id_role' => 'required|exists:role,id_role',
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(UserManage $userManage)
-    {
-        //
-    }
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(UserManage $userManage)
-    {
-        //
-    }
+        User::create([
+            'firstname' => $request->firstname,
+            'lastname' => $request->lastname,
+            'username' => $request->username,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'phone_number' => $request->phone_number,
+            'divisi_id_divisi' => $request->divisi_id_divisi,
+            'position_id_position' => $request->position_id_position,
+            'role_id_role' => $request->role_id_role,
+        ]);
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, UserManage $userManage)
-    {
-        //
-    }
+        
+        return redirect()->route('user-manage')->with('success', 'User added successfully.');
+        }
+    
+        public function filter(Request $request)
+        {
+            // Mendapatkan parameter sorting dari request
+            $sortOrder = $request->query('sort', 'asc');
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(UserManage $userManage)
-    {
-        //
+            // Melakukan query ke database dengan pengurutan berdasarkan firstname
+            $users = User::orderBy('firstname', $sortOrder)->paginate(6);
+
+            // Mengirim data user ke view
+            return view('superadmin.user-manage', compact('users', 'sortOrder'));
+        }
+
+        
+        
     }
-}

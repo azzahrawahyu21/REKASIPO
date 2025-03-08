@@ -2,65 +2,53 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Perusahaan;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Perusahaan;
+use Illuminate\Support\Facades\Storage;
 
-class PerusahaanController extends Controller
-{
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
+class PerusahaanController extends Controller {
+    // Tampilkan data perusahaan
+    public function index() {
+        $perusahaan = Perusahaan::first(); // Ambil data pertama
+        return view('superadmin.data-perusahaan', compact('perusahaan'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+    // Simpan atau update data perusahaan
+    public function update(Request $request) {
+        $perusahaan = Perusahaan::firstOrNew([]); // Jika belum ada, buat baru
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        // Validasi data
+        $request->validate([
+            'nama_instansi' => 'required',
+            'alamat_web' => 'required',
+            'telepon' => 'required',
+            'email' => 'required|email',
+            'alamat' => 'required',
+            'logo' => 'nullable|image|max:2048', // Validasi file gambar max 2MB
+        ]);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Perusahaan $perusahaan)
-    {
-        //
-    }
+        // Cek jika ada file logo
+        if ($request->hasFile('logo')) {
+            // Hapus logo lama jika ada
+            if ($perusahaan->logo) {
+                Storage::disk('public')->delete('logos/' . $perusahaan->logo);
+            }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Perusahaan $perusahaan)
-    {
-        //
-    }
+            // Simpan logo baru
+            $logo = $request->file('logo');
+            $logoPath = $logo->store('logos', 'public'); // Simpan di storage/logos/
+            $perusahaan->logo = basename($logoPath);
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Perusahaan $perusahaan)
-    {
-        //
-    }
+        // Update data
+        $perusahaan->fill([
+            'nama_instansi' => $request->nama_instansi,
+            'alamat_web' => $request->alamat_web,
+            'telepon' => $request->telepon,
+            'email' => $request->email,
+            'alamat' => $request->alamat,
+        ])->save();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Perusahaan $perusahaan)
-    {
-        //
+        return redirect()->route('data-perusahaan')->with('success', 'Data perusahaan berhasil diperbarui');
     }
 }

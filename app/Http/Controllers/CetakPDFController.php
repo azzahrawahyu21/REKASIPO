@@ -2,65 +2,84 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\CetakPDF;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\Memo;
+use App\Models\Undangan;
+
 
 class CetakPDFController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+    public function cetakmemoPDF($id)
     {
-        //
+        // Ambil data dari database
+        $memo = Memo::findOrFail($id); // Sesuaikan dengan model yang benar
+        $path = public_path('img/border-surat.png'); 
+
+        if (file_exists($path)) {
+            $type = pathinfo($path, PATHINFO_EXTENSION);
+            $data = file_get_contents($path);
+            $base64Image = 'data:image/' . $type . ';base64,' . base64_encode($data);
+        } else {
+            $base64Image = null; // Jika gambar tidak ditemukan
+        }
+
+        // Load view yang akan digunakan sebagai template PDF
+        $pdf = PDF::loadView('format-surat.format-memo', compact('memo'));
+
+        // Set ukuran kertas (opsional)
+        $pdf->setPaper('A4', 'portrait');
+        
+       
+
+
+        // Return PDF untuk didownload
+        return $pdf->download('laporan-memo.pdf');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function viewmemoPDF($id)
     {
-        //
+        // Ambil data dari database
+        $memo = Memo::findOrFail($id); // Sesuaikan dengan model yang benar
+
+        // Tampilkan langsung dalam browser
+        return view('format-surat.format-memo', compact('memo'));
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    public function cetakundanganPDF($id)
     {
-        //
+        // Ambil data dari database
+        $undangan = Undangan::findOrFail($id); // Sesuaikan dengan model yang benar
+        $path = public_path('img/border-surat.png'); 
+
+        if (file_exists($path)) {
+            $type = pathinfo($path, PATHINFO_EXTENSION);
+            $data = file_get_contents($path);
+            $base64Image = 'data:image/' . $type . ';base64,' . base64_encode($data);
+        } else {
+            $base64Image = null; // Jika gambar tidak ditemukan
+        }
+
+        // Load view yang akan digunakan sebagai template PDF
+        $pdf = PDF::loadView('format-surat.format-undangan', compact('undangan'));
+
+        // Set ukuran kertas (opsional)
+        $pdf->setPaper('A4', 'portrait');
+        
+       
+
+
+        // Return PDF untuk didownload
+        return $pdf->download('laporan-undangan.pdf');
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(CetakPDF $cetakPDF)
+    public function viewundanganPDF($id)
     {
-        //
-    }
+        // Ambil data dari database
+        $undangan = Undangan::findOrFail($id); // Sesuaikan dengan model yang benar
+        $tujuanList = explode(';', $undangan->tujuan);
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(CetakPDF $cetakPDF)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, CetakPDF $cetakPDF)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(CetakPDF $cetakPDF)
-    {
-        //
+        // Tampilkan langsung dalam browser
+        return view('format-surat.format-undangan', compact('undangan','tujuanList'));
     }
 }

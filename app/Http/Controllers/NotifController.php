@@ -2,65 +2,52 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Notif;
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Notifikasi;
 
 class NotifController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        //
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        $notifications = Notifikasi::where('id_divisi', $user->divisi_id_divisi)
+            ->orderBy('updated_at', 'desc')
+            ->limit(5)
+            ->get();
+
+        return response()->json(['notifications' => $notifications]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    // Ambil jumlah notifikasi yang belum dibaca
+    public function getUnreadCount()
     {
-        //
+        $user = Auth::user();
+        if (!$user) {
+            return response()->json(['count' => 0]);
+        }
+
+        $count = Notifikasi::where('id_divisi', $user->divisi_id_divisi)
+            ->where('is_read', 0)
+            ->count();
+
+        return response()->json(['count' => $count]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
+    // Tandai semua notifikasi sebagai sudah dibaca
+    public function markAllAsRead()
     {
-        //
+        $user = Auth::user();
+        if ($user) {
+            Notifikasi::where('id_divisi', $user->divisi_id_divisi)
+                ->where('is_read', 0)
+                ->update(['is_read' => 1]);
+        }
+        return response()->json(['success' => true]);
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(Notif $notif)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Notif $notif)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, Notif $notif)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(Notif $notif)
-    {
-        //
-    }
 }
