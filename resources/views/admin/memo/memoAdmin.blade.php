@@ -1,20 +1,29 @@
-@extends('layouts.superadmin')
-
-@section('title', 'Memo')
-
-@section('content')
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tambah Memo Super Admin</title>
+    <link href="https://cdn.jsdelivr.net/npm/summernote/dist/summernote-lite.min.css" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/summernote/dist/summernote-lite.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ asset('css/superadmin/add-memo.css') }}">
+</head>
+<body>
     <div class="container">
         <div class="header">
             <!-- Back Button -->
             <div class="back-button">
-                <a href="{{route('superadmin.dashboard')}}"><img src="/img/memo-superadmin/Vector_back.png" alt=""></a>
+                <a href="{{ route('admin.dashboard')}}"><img src="/img/memo-admin/Vector_back.png" alt=""></a>
             </div>
             <h1>Memo</h1>
         </div>        
         <div class="row">
             <div class="breadcrumb-wrapper">
                 <div class="breadcrumb" style="gap: 5px;">
-                    <a href="{{route('superadmin.dashboard')}}">Beranda</a>/<a href="#" style="color: #565656;">Memo</a>
+                    <a href="{{ route('admin.dashboard') }}">Beranda</a>/<a href="#" style="color: #565656;">Memo</a>
                 </div>
             </div>
         </div>
@@ -23,7 +32,7 @@
         <div class="surat">
             <div class="header-tools">
                 <div class="search-filter">
-                <form method="GET" action="{{ route('memo.superadmin') }}" class="search-filter d-flex gap-2">
+                <form method="GET" action="{{ route('memo.admin') }}" class="search-filter d-flex gap-2">
                     <div class="dropdown">
                         <select name="status" class="form-select" onchange="this.form.submit()">
                             <option value="">Status</option>
@@ -43,13 +52,13 @@
                     </div>
                     <div class="d-flex gap-2">
                         <div class="btn btn-search d-flex align-items-center" style="gap: 5px;">
-                            <img src="/img/memo-superadmin/search.png" alt="search" style="width: 20px; height: 20px;">
+                            <img src="/img/memo-admin/search.png" alt="search" style="width: 20px; height: 20px;">
                             <input type="text" name="search" class="form-control border-0 bg-transparent" placeholder="Cari" value="{{ request('search') }}" onchange="this.form.submit()" style="outline: none; box-shadow: none;">
                         </div>
                     </div>
                     </form>
                     <!-- Add User Button to Open Modal -->
-                    <a href="{{route ('memo-superadmin/add')}}" class="btn btn-add">+ <span>Tambah Memo</span></a>
+                    <a href="{{route ('memo-admin/add')}}" class="btn btn-add">+ <span>Tambah Memo</span></a>
                 </div>
             </div>
         </div>
@@ -101,15 +110,14 @@
                         @endif
                     </td>
                     <td>
-                    <form method="POST" action="{{ route('memo.destroy', $memo->id_memo) }}" style="display: inline;">
-                            @csrf
-                            @method('DELETE')
-                        <button class="btn btn-sm2" data-bs-toggle="modal" data-bs-target="#deleteModal">
-                            <img src="/img/memo-superadmin/Delete.png" alt="delete">
-                        </button>
-                        </form>
-                        
-                        @if ($memo->status == 'approve')
+                        @if ($memo->status != 'reject') 
+                        <a href="{{ route('kirim-memoAdmin.admin',['id' => $memo->id_memo]) }}" class="btn btn-sm1">
+                            <img src="/img/memo-admin/share.png" alt="share">
+                        </a>               
+                        @endif             
+
+                        <!-- Status Approve -->
+                        @if ($memo->status == 'approve') 
                         <form action="{{ route('arsip.archive', ['document_id' => $memo->id_memo, 'jenis_document' => 'Memo']) }}" method="POST" style="display: inline;">
                             @csrf
                             @method('POST') <!-- Pastikan metode ini sesuai dengan route -->
@@ -117,59 +125,22 @@
                                 <img src="/img/memo-superadmin/arsip.png" alt="arsip">
                             </button>
                         </form>
-
                         @else
                             <a href="{{ route('memo.edit', $memo->id_memo) }}" class="btn btn-sm3">
-                                <img src="/img/memo-superadmin/edit.png" alt="edit">
+                                <img src="/img/memo-admin/edit.png" alt="edit">
                             </a>
                         @endif
+
+                        <a href="{{ route('view.memo',$memo->id_memo) }}" class="btn btn-sm1">
+                            <img src="/img/memo-admin/viewBlue.png" alt="view">
+                        </a>
+
                     </td>
                 </tr>
                 @endforeach
             </tbody>
         </table>
         {{ $memos->links('pagination::bootstrap-5') }}
-
-        <!-- Modal Hapus -->
-        <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <!-- Tombol Close -->
-                    <button type="button" class="btn-close ms-auto m-2" data-bs-dismiss="modal" aria-label="Close"></button>
-                    <div class="modal-body text-center">
-                        <!-- Ikon atau Gambar -->
-                        <img src="/img/memo-superadmin/konfirmasi.png" alt="Hapus Ikon" class="mb-3" style="width: 80px;">
-                        <!-- Tulisan -->
-                        <h5 class="mb-4" style="color: #545050;"><b>Hapus Memo?</b></h5>
-                        <!-- Tombol -->
-                        <div class="d-flex justify-content-center gap-3">
-                            <button type="button" class="btn cancel" data-bs-dismiss="modal"><a href="{{route ('memo.superadmin')}}">Batal</a></button>
-                            
-                            <button type="button" class="btn ok" id="confirmDelete">Oke</button>
-                            
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Modal Berhasil -->
-        <div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <!-- Tombol Close -->
-                    <button type="button" class="btn-close ms-auto m-2" data-bs-dismiss="modal" aria-label="Close"></button>
-                    <div class="modal-body text-center">
-                        <!-- Ikon atau Gambar -->
-                        <img src="/img/memo-superadmin/success.png" alt="Berhasil Ikon" class="mb-3" style="width: 80px;">
-                        <!-- Tulisan -->
-                        <h5 class="mb-4" style="color: #545050;"><b>Berhasil Menghapus Memo</b></h5>
-                        <!-- Tombol -->
-                        <button type="button" class="btn back" data-bs-dismiss="modal"><a href="{{route ('memo.superadmin')}}">Kembali</a></button>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- Modal Arsip -->
         <div class="modal fade" id="arsipModal" tabindex="-1" aria-labelledby="arsipModalLabel" aria-hidden="true">
@@ -179,13 +150,13 @@
                     <button type="button" class="btn-close ms-auto m-2" data-bs-dismiss="modal" aria-label="Close"></button>
                     <div class="modal-body text-center">
                         <!-- Ikon atau Gambar -->
-                        <img src="/img/memo-superadmin/konfirmasi.png" alt="Hapus Ikon" class="mb-3" style="width: 80px;">
+                        <img src="/img/memo-admin/konfirmasi.png" alt="Hapus Ikon" class="mb-3" style="width: 80px;">
                         <!-- Tulisan -->
                         <h5 class="mb-4" style="color: #545050;"><b>Arsip Memo?</b></h5>
                         <!-- Tombol -->
                         <div class="d-flex justify-content-center gap-3">
-                            <button type="button" class="btn cancel" data-bs-dismiss="modal"><a href="{{route ('memo.superadmin')}}">Batal</a></button>
-                            <button type="button" class="btn ok" id="confirmArsip">Oke</button>
+                            <button type="button" class="btn-cancel" data-bs-dismiss="modal"><a href="{{route ('memo.admin')}}">Cancel</a></button>
+                            <button type="button" class="btn-ok" id="confirmArsip">OK</button>
                         </div>
                     </div>
                 </div>
@@ -200,15 +171,16 @@
                     <button type="button" class="btn-close ms-auto m-2" data-bs-dismiss="modal" aria-label="Close"></button>
                     <div class="modal-body text-center">
                         <!-- Ikon atau Gambar -->
-                        <img src="/img/memo-superadmin/success.png" alt="Berhasil Ikon" class="mb-3" style="width: 80px;">
+                        <img src="/img/memo-admin/success.png" alt="Berhasil Ikon" class="mb-3" style="width: 80px;">
                         <!-- Tulisan -->
                         <h5 class="mb-4" style="color: #545050;"><b>Sukses</b></h5>
                         <h6 class="mb-4" style="font-size: 14px; color: #5B5757;">Berhasil Arsip Memo</h6>
                         <!-- Tombol -->
-                        <button type="button" class="btn back" data-bs-dismiss="modal"><a href="{{route ('memo.superadmin')}}">Kembali</a></button>
+                        <button type="button" class="btn-back" data-bs-dismiss="modal"><a href="{{route ('memo.admin')}}">Kembali</a></button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-@endsection
+</body>
+</html>
